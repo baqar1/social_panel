@@ -18,10 +18,26 @@ class User extends Authenticatable
      * @var array<int, string>
      */
     protected $fillable = [
-        'name',
+        'first_name',
+        'last_name',
         'email',
         'password',
+        'phone_number',
+        'user_image',
+        'gender',
+        'dob',
+        'department_id',
+        'batch',
+        'semester',
     ];
+    protected $attributes = [
+        'user_image' => 'default.jpg',
+    ];
+
+    // public static function getUserById($id)
+    // {
+    //     return User::find($id);
+    // }
 
     /**
      * The attributes that should be hidden for serialization.
@@ -41,4 +57,34 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+    public function posts(){
+        return $this->hasMany(Post::class);
+    }
+    public function likes()
+{
+    return $this->hasMany(Like::class);
+}
+
+public function comments()
+{
+    return $this->hasMany(Comment::class);
+}
+public function followers()
+{
+    return $this->belongsToMany(User::class, 'followers', 'user_id', 'follower_id');
+}
+
+public function following()
+{
+    return $this->belongsToMany(User::class, 'followers', 'follower_id', 'user_id');
+}
+public function messages()
+    {
+        return $this->hasMany(Message::class, 'from_user_id')
+            ->orWhere('to_user_id', $this->id)
+            ->latest();
+    }
+
+
+
 }
