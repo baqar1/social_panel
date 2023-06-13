@@ -303,7 +303,7 @@
                                     <div class="widget widget-about">
                                         <img src="images/LGU.png" alt="" height="150" width="130" style="margin-top: 9%">
                                         <div class="sign_link">
-											<a href="https://ctl.umt.edu.pk/" title=""><h1> Center for Teaching and Learning </h1></a>
+											<a href="https://lgu.edu.pk/" target="_blank" title=""><h1> Center for Teaching and Learning </h1></a>
 										</div>
 									</div><!--widget-about end-->
 									<div class="widget suggestions full-width">
