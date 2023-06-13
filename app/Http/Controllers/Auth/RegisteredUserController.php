@@ -38,9 +38,10 @@ class RegisteredUserController extends Controller
     public function store(Request $request): RedirectResponse
     {
         if($request->has('user_image')){
-            // dd($request->file('user_image')->getClientOriginalName());
-            $imageName = time().'.'.$request->file('user_image')->getClientOriginalName();
-            $request->file('user_image')->storeAs('uploads', $imageName, 'public');
+            $image = $request->file('user_image');
+
+            $imageName = time().'.'.$request->file('user_image')->extension();
+            $image->move(public_path('uploads'), $imageName);
         }
 
         $user = User::create([

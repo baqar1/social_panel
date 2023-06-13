@@ -60,9 +60,10 @@ class DashboardController extends Controller
         $projectPost->project_description = $request->input('project_description');
 
         if($request->has('project_file')){
-            // dd($request->file('project_file'));
-            $imageName = time().'.'.$request->file('project_file')->getClientOriginalName();
-            $request->file('project_file')->storeAs('uploads', $imageName, 'public');
+            $image = $request->file('project_file');
+
+            $imageName = time().'.'.$request->file('project_file')->extension();
+            $image->move(public_path('uploads'), $imageName);
         }
         $projectPost->project_file = $imageName;
         // Save the updated post
