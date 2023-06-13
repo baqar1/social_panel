@@ -1,8 +1,10 @@
 <?php
 
 namespace App\Http\Controllers;
-
+use Illuminate\Support\Facades\View;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use App\Models\User;
 use App\Models\Like;
@@ -14,16 +16,18 @@ use App\Models\Project_post;
 use App\Models\Semester;
 
 class DashboardController extends Controller
-{  
-    // <!-- Create Project post -->
+{
+        // <!-- Create a post function -->
     public function project_post(Request $request){
-        if (!auth()->check()) {
-            return redirect()->route('login');
-        }
-        if($request->has('project_file')){
-            // dd($request->file('project_file'));
-            $imageName = time().'.'.$request->file('project_file')->getClientOriginalName();  
-            $request->file('project_file')->storeAs('uploads', $imageName, 'public');
+        $this->validate($request,[
+            'project_title'=>'required',
+            'project_file'=>'required',
+         ]);
+         if($request->has('project_file')){
+            $image = $request->file('project_file');
+
+            $imageName = time().'.'.$request->file('project_file')->extension();
+            $image->move(public_path('uploads'), $imageName);
         }
         $projectPosts = project_post::create([
             'user_id' => $request->user()->id,
@@ -33,83 +37,111 @@ class DashboardController extends Controller
             'project_file' => $imageName?? null,
             'project_description' => $request->project_description,
         ]);
-        
+
         return redirect(route('dashboard'));
     }
 
 
-    // <!-- Create post -->
-    public function post(Request $request){
-        // Check if user is authenticated
-        if (!auth()->check()) {
-            return redirect()->route('login');
-        }
-        
-        $Posts = post::create([
-            'user_id' => $request->user()->id,
-            'title' => $request->title,
-            'department' => $request->department,
-            'subject' => $request->subject,
-            'image' => $request->image,
-            'description' => $request->description,
+        // <!-- Update a post function -->
+    public function updatePost(Request $request, $id){
+        $projectPost = project_post::findOrFail($id);
+
+        $validatedData = $request->validate([
+            'project_title' => 'required|string',
+            'project_name' => 'required|string',
+            'department' => 'required|string',
+            'project_description' => 'required|string',
+            'project_file' => 'nullable|image', // Validate that it is an image file (optional)
         ]);
-        
-        return redirect(route('dashboard'));
+        // Update the post data based on the request input
+        $projectPost->project_title = $request->input('project_title');
+        $projectPost->project_name = $request->input('project_name');
+        $projectPost->department = $request->input('department');
+        $projectPost->project_description = $request->input('project_description');
+
+        if($request->has('project_file')){
+            // dd($request->file('project_file'));
+            $imageName = time().'.'.$request->file('project_file')->getClientOriginalName();
+            $request->file('project_file')->storeAs('uploads', $imageName, 'public');
+        }
+        $projectPost->project_file = $imageName;
+        // Save the updated post
+        $projectPost->save();
+
+        return response()->json(['message' => 'Post updated successfully']);
     }
 
-   
-    // <!-- Dashboard main page function -->
-    public function dashboard(Request $request)
-    {
-        $topProfiles = User::take(20)->get();
-        $posts = Project_post::orderBy('created_at','desc')->get();
-        $firstPost = Project_post::orderBy('created_at','desc')->first();
-        // $data = Post::all();
-        $data = Post::orderBy('created_at', 'desc')->get();
 
-        // follows code start
+
+        // <!-- Edit a post function -->
+    public function getProjectPost($id){
+        $projectPost = project_post::findOrFail($id);
+
+        return response()->json($projectPost);
+    }
+
+    public function deletePost(Request $request, $id){
+        // Find the post to delete
+        $projectPost = project_post::findOrFail($id);
+
+        // Delete the post
+        $projectPost->delete();
+
+        return response()->json(['success' => true, 'message' => 'Post deleted successfully']);
+    }
+
+
+        // <!-- Dahboard page all view function -->
+    public function dashboard(Request $request){
+        $topProfiles = User::take(20)->get();
+        $posts = Project_post::orderBy('created_at', 'desc')->get();
+        $firstPost = Project_post::orderBy('created_at', 'desc')->first();
+        $data = Post::orderBy('created_at', 'desc')->get();
         $user = auth()->user();
         $followers = $user->followers()->count();
         $following = $user->following()->count();
-
-
-        $chat = User::with(['messages' => function ($query) {
-            $query->select('from_user_id', DB::raw('MAX(created_at) as last_message_time'))
-                ->groupBy('from_user_id');
-        }])
-        ->withCount('unreadMessages')
-        ->take(20)
+        $projectPosts = project_post::all();
+        // Chat/Message box code
+        $chat = DB::table('users')
+        ->leftJoin('messages', function ($join) use ($user) {
+            $join->on('users.id', '=', 'messages.from_user_id')
+                ->where('messages.created_at', '=', function ($query) use ($user) {
+                    $query->selectRaw('MAX(created_at)')
+                        ->from('messages')
+                        ->whereRaw('(from_user_id = users.id AND to_user_id = ?) OR (from_user_id = ? AND to_user_id = users.id)', [$user->id, $user->id]);
+                });
+        })
+        ->leftJoin('messages as m', function ($join) {
+            $join->on(function ($query) {
+                $query->on('m.from_user_id', '=', 'users.id')
+                    ->on('m.to_user_id', '=', 'messages.to_user_id');
+            })
+            ->orWhere(function ($query) {
+                $query->on('m.from_user_id', '=', 'messages.from_user_id')
+                    ->on('m.to_user_id', '=', 'users.id');
+            })
+            ->on('m.created_at', '>', 'messages.created_at')
+            ->whereNull('m.read_at');
+        })
+        ->select(
+            'users.id as from_user_id',
+            'users.name as from_user_name',
+            'users.user_image as from_user_image',
+            'messages.message',
+            'messages.created_at',
+            'messages.read_at',
+            DB::raw('COUNT(m.id) as unread_messages')
+        )
+        ->where(function ($query) use ($user) {
+            $query->where('messages.to_user_id', $user->id)
+                ->orWhere('messages.from_user_id', $user->id);
+        })
+        ->groupBy('users.id', 'from_user_id', 'users.name', 'user_image', 'messages.message', 'messages.created_at', 'messages.read_at')
+        ->orderByDesc('messages.created_at')
         ->get();
-    
-        // Fetch the last message and its time for each profile
-        foreach ($topProfiles as $profile) {
-            $lastMessage = Message::where('from_user_id', $profile->id)
-                ->orWhere('to_user_id', $profile->id)
-                ->orderBy('created_at', 'desc')
-                ->first();
-    
-            $profile->last_message = $lastMessage->message;
-            $profile->last_message_time = $lastMessage->created_at;
-        }
 
-        
-    return view('dashboard', compact( 'posts','data','topProfiles','firstPost','followers','following','user','chat'));
+        return view('dashboard', compact('posts', 'data', 'topProfiles', 'firstPost','projectPosts', 'followers', 'following', 'user', 'chat'));
     }
-//     public function dashboard(Request $request, $id)
-// {
-//     $topProfiles = User::take(20)->get();
-//     $posts = Project_post::orderBy('created_at','desc')->get();
-//     $firstPost = Project_post::orderBy('created_at','desc')->first();
-//     $data = Post::orderBy('created_at', 'desc')->get();
-
-//     $user = auth()->user();
-//     $followers = $user->followers()->count();
-//     $following = $user->following()->count();
-
-//     $recipient = User::find($id);
-
-//     return view('dashboard', compact('posts', 'data', 'topProfiles', 'firstPost', 'followers', 'following', 'user', 'recipient'));
-// }
 
 
 
@@ -117,11 +149,10 @@ class DashboardController extends Controller
     public function search(Request $request)
     {
         $searchTerm = $request->input('search');
-        $users = User::where('first_name', 'like', "%$searchTerm%")
+        $users = User::where('name', 'like', "%$searchTerm%")
                         ->orWhere('department_id', 'like', "%$searchTerm%")
                         ->orWhere('semester', 'like', "%$searchTerm%")
                         ->get();
-    // dd($results);
         return view('admin.allStudents',compact('users'));
     }
 
@@ -133,8 +164,7 @@ class DashboardController extends Controller
 
 
     // <!-- Post like function -->
-    public function like(Request $request)
-    {
+    public function like(Request $request){
         $project_post_id = $request->input('project_post');
         $project_post = Project_Post::find($project_post_id);
 
@@ -162,9 +192,8 @@ class DashboardController extends Controller
 
 
 
-    // <!-- post comment -->
-    public function comment(Request $request)
-    {
+    // <!-- post comment & Get Comment-->
+    public function comment(Request $request){
         $project_post_id = $request->input('project_post');
         $project_post = Project_Post::find($project_post_id);
 
@@ -183,6 +212,14 @@ class DashboardController extends Controller
         return response()->json(['comments_count'=>$project_post->comments->count()]);
 
     }
+    public function getComments($project_post_id)
+    {
+        $project_post = Project_Post::findOrFail($project_post_id);
+        $comments = $project_post->comments()->with('user')->get();
+
+        return response()->json(['comments' => $comments]);
+    }
+
 
 
     // <!-- View User profile -->
@@ -224,7 +261,7 @@ class DashboardController extends Controller
     // <!-- user unfollow function -->
     public function unfollow($id)
     {
-        
+
         $user = auth()->user();
         $following = User::find($id);
         if (!$following) {
@@ -241,65 +278,79 @@ class DashboardController extends Controller
     }
 
 
-    // <!-- User send message -->
-    // public function sendMessage(Request $request, $id)
-    // {
-    //     $user = auth()->user();
-    //     $recipient = User::find($id);
-    //     $message = new Message;
-    //     $message->from_user_id = $user->id;
-    //     $message->to_user_id = $recipient->id;
-    //     $message->message = $request->input('message');
-    //     $message->save();
-    //     return redirect()->back();
-    // }
+        // <!-- getconversation chat list function -->
+    public function getConversation($userId)
+    {
+        // Get the logged-in user
+        $loggedInUser = Auth::user();
 
-    
-    public function sendMessage(Request $request)
-        {
-           dd('helo');
-            $chat = User::with(['messages' => function ($query) {
-                $query->select('from_user_id', DB::raw('MAX(created_at) as last_message_time'))
-                    ->groupBy('from_user_id');
-            }])
-            ->withCount('unreadMessages')
-            ->take(20)
+        // Get the other user (conversation partner)
+        $otherUser = User::findOrFail($userId);
+
+        // Get all conversations between the logged-in user and the other user
+        $conversation = Message::where(function ($query) use ($loggedInUser, $otherUser) {
+                $query->where('from_user_id', $loggedInUser->id)
+                    ->where('to_user_id', $otherUser->id);
+            })
+            ->orWhere(function ($query) use ($loggedInUser, $otherUser) {
+                $query->where('from_user_id', $otherUser->id)
+                    ->where('to_user_id', $loggedInUser->id);
+            })
+            ->orderBy('created_at', 'desc')
             ->get();
-        
-            // Fetch the last message and its time for each profile
-            foreach ($topProfiles as $profile) {
-                $lastMessage = Message::where('from_user_id', $profile->id)
-                    ->orWhere('to_user_id', $profile->id)
-                    ->orderBy('created_at', 'desc')
-                    ->first();
-        
-                $profile->last_message = $lastMessage->message;
-                $profile->last_message_time = $lastMessage->created_at;
-            }
-        
-            return redirect(route('dashboard'), compact('chat'));
-        }
-        
-    
+
+        // Mark all messages from the other user as read
+        Message::where('from_user_id', $otherUser->id)
+            ->where('to_user_id', $loggedInUser->id)
+            ->where('read', 0)
+            ->update(['read' => 1]);
+
+        return response()->json(['conversation' => $conversation, 'otherUser' => $otherUser]);
+    }
+
+
+
+        // <!-- Send message in dashboard function -->
+    public function sendMessage($userId, Request $request){
+
+        // Get the logged-in user
+        $loggedInUser = Auth::user();
+
+        // Get the recipient user
+        $recipientUser = User::findOrFail($userId);
+
+        // Create a new message
+        $message = new Message();
+        $message->from_user_id = $loggedInUser->id;
+        $message->to_user_id = $recipientUser->id;
+        $message->message = $request->input('message');
+        $message->save();
+
+        // Return a simple HTTP response without content
+        return response('', 204);
+    }
+
+
+        // <!-- Get all Message history in dashboard function -->
+    public function getMessageHistory($userId){
+        // Get the logged-in user
+        $loggedInUser = Auth::user();
+
+        // Get the other user (conversation partner)
+        $otherUser = User::findOrFail($userId);
+
+        // Get the message history between the logged-in user and the other user
+        $messageHistory = Message::whereIn('from_user_id', [$loggedInUser->id, $otherUser->id])
+            ->whereIn('to_user_id', [$loggedInUser->id, $otherUser->id])
+            ->orderBy('created_at', 'asc')
+            ->get();
+
+        return response()->json(['success' => true, 'messageHistory' => $messageHistory]);
+    }
 
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
 }
 
 

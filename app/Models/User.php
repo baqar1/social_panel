@@ -18,7 +18,7 @@ class User extends Authenticatable
      * @var array<int, string>
      */
     protected $fillable = [
-        'first_name',
+        'name',
         'last_name',
         'email',
         'password',
@@ -84,6 +84,17 @@ public function messages()
             ->orWhere('to_user_id', $this->id)
             ->latest();
     }
+
+    public function sentMessages()
+    {
+        return $this->hasMany(Message::class, 'from_user_id');
+    }
+
+    public function receivedMessages()
+    {
+        return $this->hasMany(Message::class, 'to_user_id');
+    }
+
 
 
 

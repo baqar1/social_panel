@@ -15,7 +15,7 @@ use App\Models\Semester;
 class AllStudentController extends Controller
 {
     public function allStudents(){
-        $users = User::get();
+        $users = User::where('id','!=',auth()->user()->id)->get();
         return view('admin.allStudents',compact('users'));
     }
 }
