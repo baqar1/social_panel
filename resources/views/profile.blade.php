@@ -2,24 +2,29 @@
 @extends('admin.layout')
 @section('umt')
 <style>
-  .message-box {
-  display: inline-block;
-  max-width: 80%;
-  padding: 8px 12px;
-  border-radius: 16px;
-  margin: 4px;
-  font-size: 14px;
-}
 
-.message-box.sent {
-  background-color: #DCF8C6;
-  float: right;
-}
-
-.message-box.received {
-  background-color: #dfe8f7;
-  float: left;
-}
+.like-button {
+			color: black;
+		}
+		.like-button.liked {
+			color: red;
+		}
+		.sent-message {
+			background-color: #c6f3d8;
+			text-align: right;
+		}
+		.received-message {
+			background-color: #c8e0f0;
+			text-align: left;
+		}
+		button.show-comments-link {
+		border: none;
+		background-color: transparent;
+		color: inherit;
+		padding: 0;
+		font: inherit;
+		cursor: pointer;
+		}
 
 </style>
 
@@ -73,41 +78,30 @@
                 <div class="col-md-1"></div>
                 <div class="col-md-10">
                   @foreach ($posts as $key=>$post)
-                      @if ($key>0)
+
                       <div class="posts-section">
                         <div class="post-bar">
                           <div class="post_topbar">
                             <div class="usy-dt">
-                              {{-- <img src="http://via.placeholder.com/50x50" alt=""> --}}
                               <img src="{{asset('uploads')}}/{{$post->user->user_image}}" alt="" width="50" height="50">
                               <div class="usy-name">
                                 <span> {{ $post->user->name }}</span>
-                                {{-- <h3>{{$post->project_title}}</h3> --}}
                                 @if($post->image)
                                   <img src="{{asset('uploads')}}/{{$post->user_image}}" width="200px" height="200px" alt="" />
                                 @endif
-                                <span><img src="images/clock.png" alt=""><p>{{ date('D H A', strtotime($post->created_at)) }}</p></span>
+                                <span><img src="{{ asset('images/clock.png') }}" alt=""><p>{{ date('D H A', strtotime($post->created_at)) }}</p></span>
                               </div>
                             </div>
-                            <div class="ed-opts">
-                              <a href="#" title="" class="ed-opts-open"><i class="la la-ellipsis-v"></i></a>
-                              <ul class="ed-options">
-                                <li><a href="#" title="">Edit Post</a></li>
-                                <li><a href="#" title="">Unsaved</a></li>
-                                <li><a href="#" title="">Unbid</a></li>
-                                <li><a href="#" title="">Close</a></li>
-                                <li><a href="#" title="">Hide</a></li>
-                              </ul>
-                            </div>
+
                           </div>
                           <div class="epi-sec">
                             <ul class="descp">
-                              <li><img src="images/icon8.png" alt=""><span>Epic Coder</span></li>
-                              <li><img src="images/icon9.png" alt=""><span>Pakistan</span></li>
+                              <li><img src="{{ asset('images/icon8.png') }}" alt=""><span>LGU</span></li>
+                              <li><img src="{{ asset('images/icon9.png') }} " alt=""><span>Pakistan</span></li>
                             </ul>
                             <ul class="bk-links">
                               <li><a href="#" title=""><i class="la la-bookmark"></i></a></li>
-                              <li><a href="#" title=""><i class="la la-envelope"></i></a></li>
+                              <li><a href="{{ route('chatify') }}" title=""><i class="la la-envelope"></i></a></li>
                             </ul>
                           </div>
                           <div class="job_descp">
@@ -122,31 +116,44 @@
                           </div>
                           <div class="job-status-bar">
                             <ul class="like-com">
-                              <li>
-                                <div class="post-actions">
-                                  <form class="like-form" action="{{ route('like', ['project_post' => $post->id]) }}" method="POST">
-                                    @csrf
-                                    <button type="submit"><i class="la la-heart" style="color: red"></i> Like</button>
-                                  </form>
-                                  <p class="like_count">{{ $post->likes->count() }} likes</p>
-                                </div>
-                              </li>&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp
-                              <li><div class="post-comment">
-                                <form class="comment-form" action="{{ route('comment', ['project_post' => $post->id]) }}" method="POST">
-                                  @csrf
-                                  <input type="text" name="comment">
-                                  <button type="submit">Comment</button>
-                                  </form>
-                                  <p class="comment_count">{{ $post->comments->count() }} comments</p>
-                                </div>
-                              </li>
+                                <li>
+                                    <div class="post-actions">
+                                        <form class="like-form"  action="{{ route('like', ['project_post' => $post->id]) }}" method="POST">
+                                            @csrf
+                                            <button type="submit" class="like-button {{ $post->likes->where('user_id', auth()->id())->first() ? 'liked' : '' }}"><i class="la la-heart"></i> Like</button>
+                                        </form>
+                                        <p class="like_count">{{ $post->likes->count() }} likes</p>
+                                    </div>
+                                </li>&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp
+                                <li>
+                                    <div class="post-comment">
+                                        <form class="comment-form" action="{{ route('comment', ['project_post' => $post->id]) }}" method="POST">
+                                            @csrf
+                                            <input type="text" name="comment">
+                                            <button type="submit">Comment</button>
+                                        </form>
+                                        <p class="comment_count" style="margin-bottom:1rem;">{{ $post->comments->count() }} <button class="show-comments-link" href="#" data-post-id="{{ $post->id }}">Comments</button></p>
+                                        <div class="comments-container" style="display: none;">
+                                            <div class="comments-row">
+                                                @foreach($post->comments as $comment)
+                                                    <div class="comment">
+                                                        <p>
+                                                            <span class="comment-user">{{ $comment->user->name }}:</span>
+                                                            <span class="comment-text">{{ $comment->comment }}</span>
+                                                        </p>
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                        </div>
+                                    </div>
+                                </li>
                             </ul>
                             <a><i class="la la-eye"></i>Views 50</a>
-                          </div>
+                        </div>
 
                         </div><!--post-bar end-->
                       </div><!--posts-section end-->
-                      @endif
+
                   @endforeach
 								</div><!--main-ws-sec end-->
               </div>
@@ -212,7 +219,107 @@
                   }
               });
           });
+
       });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      // Post Like Ajax
+		$(document).ready(function() {
+			$('.like-form').submit(function(event) {
+				event.preventDefault(); // Prevent default form submission behavior
+				var $form = $(this); // Save a reference to the form element
+				var formData = $form.serialize(); // Serialize form data
+				$.ajax({
+					type: 'POST',
+					url: $form.attr('action'), // Get the form's action attribute
+					data: formData,
+					success: function(response) {
+						// Check if the count of likes has changed
+						var $likeCount = $form.closest('.post-actions').find('.like_count');
+						var currentCount = parseInt($likeCount.text());
+						var newCount = parseInt(response.likes_count);
+						if (newCount !== currentCount) {
+							// Update the count of likes if it has changed
+							$likeCount.text(newCount + ' likes');
+						}
+						// Toggle the 'liked' class on the like button
+						var $likeButton = $form.find('.like-button');
+						$likeButton.toggleClass('liked');
+					}
+				});
+			});
+		});
+
+
+
+		// Ajax comments
+		$(document).ready(function() {
+			$('.comment-form').submit(function(event) {
+				event.preventDefault(); // Prevent default form submission behavior
+				var $form = $(this); // Save a reference to the form element
+				var formData = $form.serialize(); // Serialize form data
+				$.ajax({
+					type: 'POST',
+					url: $form.attr('action'), // Get the form's action attribute
+					data: formData,
+					success: function(response) {
+						// Update comments count
+						var count = response.comments_count;
+						$form.closest('.post-comment').find('.comment_count').text(count + ' comments');
+						$('.comment-form input[name="comment"]').val('');
+					}
+				});
+			});
+
+			$('.show-comments-link').click(function(e) {
+					e.preventDefault();
+					var postId = $(this).data('post-id');
+					var $commentsContainer = $(this).closest('.post-comment').find('.comments-container');
+
+					// Make an AJAX request to fetch the comments
+					$.ajax({
+						type: 'GET',
+						url: '/comments/' + postId, // Replace with your actual route for fetching comments
+						success: function(response) {
+							$commentsContainer.empty(); // Clear existing comments
+
+							// Iterate through the comments and append them to the container
+							$.each(response.comments, function(index, comment) {
+								var username = comment.user ? comment.user.name : 'Unknown User';
+								var user_image = comment.user.user_image;
+								var image_url = "{{asset('uploads')}}"+'/'+ user_image;
+								var image = '<img src="' + image_url + '" width="30px" height="30px" alt="" />';
+								var userimage = comment.user ?image : 'Unknown User';
+								// var commentHtml = '<div class="comment"><p>' + username + ': ' + userimage + comment.comment + '</p><br></div>';
+								var commentHtml = '<div class="comment"><h3>' + userimage + username + '</h3><p style="margin-bottom:1rem;">'  + comment.comment + '</p><br></div>';
+
+								$commentsContainer.append(commentHtml);
+							});
+
+							$commentsContainer.show(); // Show the comments container
+						}
+					});
+				});
+		});
+
     </script>
 
 @endsection

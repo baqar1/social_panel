@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>UMT StudentCentralHub</title>
+<title>LGU StudentCentralHub</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="description" content="" />
 <meta name="keywords" content="" />
@@ -23,7 +23,8 @@
 			<div class="container">
 				<div class="header-data">
 					<div class="logo">
-						<a href="" title=""><img src="{{asset('images/umtt.png')}}" alt="" width="50" height="50"></a>
+						<a href="{{ route('dashboard') }}"  title="">
+                            <img src="{{asset('images/LGU.png')}}" alt="" width="50" height="50"></a>
 					</div><!--logo end-->
 					<div class="search-bar">
 						<form id="search-form" method="GET" action="{{ route('search') }}">

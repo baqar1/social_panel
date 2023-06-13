@@ -226,19 +226,11 @@ class DashboardController extends Controller
     public function showProfile($id){
         $user = User::find($id);
         $posts = Project_Post::where('user_id',$id)->get();
-        $messages = [];
-        if (auth()->user()) {
-            $messages = $user->messages()->where('from_user_id', auth()->id())->orWhere('to_user_id', auth()->id())->latest()->limit(10)->get();
 
-            // $messages = auth()->user()->messages()->where('to_user_id', $id)->latest()->take(10)->get()->reverse();
-        }
-        if (!$user) {
-            abort(404);
-        }
         $followers = $user->followers()->count();
         $following = $user->following()->count();
         $is_following = auth()->user() && auth()->user()->following->contains($user);
-        return view('profile', compact('user', 'posts', 'followers', 'following', 'is_following', 'messages'));
+        return view('profile', compact('user', 'posts', 'followers', 'following', 'is_following'));
     }
 
 

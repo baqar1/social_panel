@@ -97,7 +97,7 @@ class RegisteredUserController extends Controller
         $user->name = $request->name;
         $user->last_name = $request->last_name;
         $user->email = $request->email;
-        $user->password = Hash::make($request->password);
+        //$user->password = Hash::make($request->password);
         $user->phone_number = $request->phone_number;
         $user->user_image =$imageName ?? null;
         $user->gender = $request->gender;

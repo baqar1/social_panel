@@ -101,7 +101,7 @@
 								<div class="main-ws-sec">
 									<div class="post-topbar">
 										<div class="user-picy">
-											<img src="images/umttt.png" alt="" height="50" width="50">
+											<img src="images/LGU.png" alt="" height="50" width="50">
 										</div>
 										<div class="post-st">
 											<ul>
@@ -131,12 +131,12 @@
 											</div>
 											<div class="epi-sec">
 												<ul class="descp">
-													<li><img src="images/icon8.png" alt=""><span>Epic Coder</span></li>
+													<li><img src="images/icon8.png" alt=""><span>LGU</span></li>
 													<li><img src="images/icon9.png" alt=""><span>Pakistan</span></li>
 												</ul>
 												<ul class="bk-links">
 													<li><a href="#" title=""><i class="la la-bookmark"></i></a></li>
-													<li><a href="#" title=""><i class="la la-envelope"></i></a></li>
+													<li><a href="{{ route('chatify') }}" title=""><i class="la la-envelope"></i></a></li>
 												</ul>
 											</div>
 											<div class="job_descp">
@@ -239,12 +239,12 @@
 											</div>
 											<div class="epi-sec">
 												<ul class="descp">
-													<li><img src="images/icon8.png" alt=""><span>Epic Coder</span></li>
+													<li><img src="images/icon8.png" alt=""><span>LGU</span></li>
 													<li><img src="images/icon9.png" alt=""><span>Pakistan</span></li>
 												</ul>
 												<ul class="bk-links">
 													<li><a href="#" title=""><i class="la la-bookmark"></i></a></li>
-													<li><a href="#" title=""><i class="la la-envelope"></i></a></li>
+													<li><a href="{{ route('chatify') }}" title=""><i class="la la-envelope"></i></a></li>
 												</ul>
 											</div>
 											<div class="job_descp">
@@ -301,7 +301,7 @@
 							<div class="col-lg-3 pd-right-none no-pd">
 								<div class="right-sidebar">
                                     <div class="widget widget-about">
-                                        <img src="images/umttt.png" alt="" height="150" width="130" style="margin-top: 9%">
+                                        <img src="images/LGU.png" alt="" height="150" width="130" style="margin-top: 9%">
                                         <div class="sign_link">
 											<a href="https://ctl.umt.edu.pk/" title=""><h1> Center for Teaching and Learning </h1></a>
 										</div>
@@ -909,7 +909,7 @@
 							$.each(response.comments, function(index, comment) {
 								var username = comment.user ? comment.user.name : 'Unknown User';
 								var user_image = comment.user.user_image;
-								var image_url = "{{asset('storage/uploads')}}"+'/'+ user_image;
+								var image_url = "{{asset('uploads')}}"+'/'+ user_image;
 								var image = '<img src="' + image_url + '" width="30px" height="30px" alt="" />';
 								var userimage = comment.user ?image : 'Unknown User';
 								// var commentHtml = '<div class="comment"><p>' + username + ': ' + userimage + comment.comment + '</p><br></div>';
