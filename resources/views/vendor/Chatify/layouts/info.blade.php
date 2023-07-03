@@ -1,7 +1,7 @@
 {{-- user info and avatar --}}
 <div class="avatar av-l chatify-d-flex"></div>
 {{-- <div class="avatar av-l chatify-d-flex">
-    <img src="{{asset('storage/uploads')}}/{{ auth()->user()->user_image}}" alt="" width="170" height="120">
+    <img src="{{asset('uploads/')}}/{{ auth()->user()->user_image}}" alt="" width="170" height="120">
 </div> --}}
 <p class="info-name">{{ auth()->user()->name }}</p>
 <div class="messenger-infoView-btns">

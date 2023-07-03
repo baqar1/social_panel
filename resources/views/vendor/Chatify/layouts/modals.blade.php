@@ -38,9 +38,13 @@
                   {{-- <div class="app-modal-header">Update your profile settings</div> --}}
                   <div class="app-modal-body">
                       {{-- Udate profile avatar --}}
+                      {{-- <div class="avatar av-l upload-avatar-preview chatify-d-flex"
+                      style="background-image: url('{{asset('uploads/users-avatar')}}/{{ auth()->user()->user_image}}');"
+                      ></div> --}}
                       <div class="avatar av-l upload-avatar-preview chatify-d-flex"
-                      style="background-image: url('{{asset('storage/uploads')}}/{{ auth()->user()->user_image}}');"
-                      ></div>
+                            style="background-image: url('{{ asset('uploads/users-avatar/' . auth()->user()->user_image) }}');">
+                      </div>
+
                       {{-- <div class="avatar av-l upload-avatar-preview chatify-d-flex"
                       style="background-image: url('{{ Chatify::getUserWithAvatar(Auth::user())->avatar }}');"
                       ></div> --}}

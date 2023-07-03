@@ -18,61 +18,62 @@ use App\Models\Semester;
 class DashboardController extends Controller
 {
         // <!-- Create a post function -->
-    public function project_post(Request $request){
-        $this->validate($request,[
-            'project_title'=>'required',
-            'project_file'=>'required',
-         ]);
-         if($request->has('project_file')){
-            $image = $request->file('project_file');
-
-            $imageName = time().'.'.$request->file('project_file')->extension();
-            $image->move(public_path('uploads'), $imageName);
+        public function project_post(Request $request)
+        {
+            $this->validate($request, [
+                'project_title' => 'required',
+                'project_file' => 'required|mimes:jpeg,png,mp4,mov|max:51200',
+            ]);
+        
+            if ($request->hasFile('project_file')) {
+                $file = $request->file('project_file');
+                $fileName = time().'.'.$file->getClientOriginalExtension();
+                $file->move(public_path('uploads'), $fileName);
+            }
+        
+            $projectPosts = project_post::create([
+                'user_id' => $request->user()->id,
+                'project_title' => $request->project_title,
+                'department' => $request->department,
+                'project_name' => $request->project_name,
+                'project_file' => $fileName ?? null,
+                'project_description' => $request->project_description,
+            ]);
+        
+            return redirect(route('dashboard'));
         }
-        $projectPosts = project_post::create([
-            'user_id' => $request->user()->id,
-            'project_title' => $request->project_title,
-            'department' => $request->department,
-            'project_name' => $request->project_name,
-            'project_file' => $imageName?? null,
-            'project_description' => $request->project_description,
-        ]);
-
-        return redirect(route('dashboard'));
-    }
-
 
         // <!-- Update a post function -->
-    public function updatePost(Request $request, $id){
-        $projectPost = project_post::findOrFail($id);
+        public function updatePost(Request $request, $id)
+{
+    $projectPost = project_post::findOrFail($id);
 
-        $validatedData = $request->validate([
-            'project_title' => 'required|string',
-            'project_name' => 'required|string',
-            'department' => 'required|string',
-            'project_description' => 'required|string',
-            'project_file' => 'nullable|image', // Validate that it is an image file (optional)
-        ]);
-        // Update the post data based on the request input
-        $projectPost->project_title = $request->input('project_title');
-        $projectPost->project_name = $request->input('project_name');
-        $projectPost->department = $request->input('department');
-        $projectPost->project_description = $request->input('project_description');
+    $validatedData = $request->validate([
+        'project_title' => 'required|string',
+        'project_name' => 'required|string',
+        'department' => 'required|string',
+        'project_description' => 'required|string',
+        'project_file' => 'nullable|file|mimes:jpeg,png,mp4,mov|max:51200', // Validate that it is a file (optional)
+    ]);
 
-        if($request->has('project_file')){
-            $image = $request->file('project_file');
+    // Update the post data based on the request input
+    $projectPost->project_title = $request->input('project_title');
+    $projectPost->project_name = $request->input('project_name');
+    $projectPost->department = $request->input('department');
+    $projectPost->project_description = $request->input('project_description');
 
-            $imageName = time().'.'.$request->file('project_file')->extension();
-            $image->move(public_path('uploads'), $imageName);
-        }
-        $projectPost->project_file = $imageName;
-        // Save the updated post
-        $projectPost->save();
-
-        return response()->json(['message' => 'Post updated successfully']);
+    if ($request->hasFile('project_file')) {
+        $file = $request->file('project_file');
+        $fileName = time() . '.' . $file->getClientOriginalExtension();
+        $file->move(public_path('uploads'), $fileName);
+        $projectPost->project_file = $fileName;
     }
 
+    // Save the updated post
+    $projectPost->save();
 
+    return response()->json(['message' => 'Post updated successfully']);
+}
 
         // <!-- Edit a post function -->
     public function getProjectPost($id){
@@ -103,45 +104,45 @@ class DashboardController extends Controller
         $following = $user->following()->count();
         $projectPosts = project_post::all();
         // Chat/Message box code
-        $chat = DB::table('users')
-        ->leftJoin('messages', function ($join) use ($user) {
-            $join->on('users.id', '=', 'messages.from_user_id')
-                ->where('messages.created_at', '=', function ($query) use ($user) {
-                    $query->selectRaw('MAX(created_at)')
-                        ->from('messages')
-                        ->whereRaw('(from_user_id = users.id AND to_user_id = ?) OR (from_user_id = ? AND to_user_id = users.id)', [$user->id, $user->id]);
-                });
-        })
-        ->leftJoin('messages as m', function ($join) {
-            $join->on(function ($query) {
-                $query->on('m.from_user_id', '=', 'users.id')
-                    ->on('m.to_user_id', '=', 'messages.to_user_id');
-            })
-            ->orWhere(function ($query) {
-                $query->on('m.from_user_id', '=', 'messages.from_user_id')
-                    ->on('m.to_user_id', '=', 'users.id');
-            })
-            ->on('m.created_at', '>', 'messages.created_at')
-            ->whereNull('m.read_at');
-        })
-        ->select(
-            'users.id as from_user_id',
-            'users.name as from_user_name',
-            'users.user_image as from_user_image',
-            'messages.message',
-            'messages.created_at',
-            'messages.read_at',
-            DB::raw('COUNT(m.id) as unread_messages')
-        )
-        ->where(function ($query) use ($user) {
-            $query->where('messages.to_user_id', $user->id)
-                ->orWhere('messages.from_user_id', $user->id);
-        })
-        ->groupBy('users.id', 'from_user_id', 'users.name', 'user_image', 'messages.message', 'messages.created_at', 'messages.read_at')
-        ->orderByDesc('messages.created_at')
-        ->get();
+        // $chat = DB::table('users')
+        // ->leftJoin('messages', function ($join) use ($user) {
+        //     $join->on('users.id', '=', 'messages.from_user_id')
+        //         ->where('messages.created_at', '=', function ($query) use ($user) {
+        //             $query->selectRaw('MAX(created_at)')
+        //                 ->from('messages')
+        //                 ->whereRaw('(from_user_id = users.id AND to_user_id = ?) OR (from_user_id = ? AND to_user_id = users.id)', [$user->id, $user->id]);
+        //         });
+        // })
+        // ->leftJoin('messages as m', function ($join) {
+        //     $join->on(function ($query) {
+        //         $query->on('m.from_user_id', '=', 'users.id')
+        //             ->on('m.to_user_id', '=', 'messages.to_user_id');
+        //     })
+        //     ->orWhere(function ($query) {
+        //         $query->on('m.from_user_id', '=', 'messages.from_user_id')
+        //             ->on('m.to_user_id', '=', 'users.id');
+        //     })
+        //     ->on('m.created_at', '>', 'messages.created_at')
+        //     ->whereNull('m.read_at');
+        // })
+        // ->select(
+        //     'users.id as from_user_id',
+        //     'users.name as from_user_name',
+        //     'users.user_image as from_user_image',
+        //     'messages.message',
+        //     'messages.created_at',
+        //     'messages.read_at',
+        //     DB::raw('COUNT(m.id) as unread_messages')
+        // )
+        // ->where(function ($query) use ($user) {
+        //     $query->where('messages.to_user_id', $user->id)
+        //         ->orWhere('messages.from_user_id', $user->id);
+        // })
+        // ->groupBy('users.id', 'from_user_id', 'users.name', 'user_image', 'messages.message', 'messages.created_at', 'messages.read_at')
+        // ->orderByDesc('messages.created_at')
+        // ->get();
 
-        return view('dashboard', compact('posts', 'data', 'topProfiles', 'firstPost','projectPosts', 'followers', 'following', 'user', 'chat'));
+        return view('dashboard', compact('posts', 'data', 'topProfiles', 'firstPost','projectPosts', 'followers', 'following', 'user', ));
     }
 
 
@@ -220,6 +221,24 @@ class DashboardController extends Controller
 
         return response()->json(['comments' => $comments]);
     }
+
+
+    
+    public function showPost($id)
+    {
+        $post = project_post::findOrFail($id);
+        $post->increment('views_count'); // Increment the views_count column by 1
+    
+        return view('dashboard', compact('post'));
+    }
+    
+    
+
+    
+    
+    
+
+
 
 
 

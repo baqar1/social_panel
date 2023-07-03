@@ -4,7 +4,7 @@
             style="background-image: url('{{ Chatify::getUserWithAvatar($user)->avatar }}');">
         </div>
        
-        {{asset("storage/attachments")}}/{{ $attachment->file}}
+        {{asset("uploads/attachments")}}/{{ $attachment->file}}
         <p>{{ strlen($user->name) > 5 ? substr($user->name,0,6).'..' : $user->name }}</p>
     @endif
 </div>

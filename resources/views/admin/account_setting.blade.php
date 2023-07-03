@@ -42,6 +42,11 @@
                     </div>
                     <div class="form-group">
                         <label class="required" for="email">Email</label><br>
+                        <input class="form-control" type="email" id="email" size="118" value="{{ $users->email }}" readonly>
+                        <span class="help-block"> </span>
+                    </div>
+                    {{-- <div class="form-group">
+                        <label class="required" for="email">Email</label><br>
                         <input class="form-control {{ $errors->has('email') ? 'is-invalid' : '' }}" type="email"
                                name="email" id="email"size = "118" value="{{ old('email', $users->email) }}" required>
                         @if($errors->has('email'))
@@ -50,7 +55,7 @@
                             </div>
                         @endif
                         <span class="help-block"> </span>
-                    </div>
+                    </div> --}}
                     <div class="form-group">
                         <label class="required" for="phone_number">phone_number</label><br>
                         <input class="form-control {{ $errors->has('phone_number') ? 'is-invalid' : '' }}" type="text"

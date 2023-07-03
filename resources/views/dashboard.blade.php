@@ -77,7 +77,7 @@
 										<div class="suggestions-list">
 											<div class="suggestion-usd">
 												@foreach ($topProfiles as $profile)
-													<div class="suggestion-usd">
+													<div class="suggestion-usd">											
 														<div class="sgt-text" style="margin-right: 6%">
 															<img src="{{asset('uploads')}}/{{$profile->user_image}}" alt="" width="35" height="35">
 														</div>
@@ -146,7 +146,16 @@
 													<li><span>{{$firstPost->project_name}}</span></li>
 												</ul>
 												<p>{{$firstPost->project_description}}</p>
-												<img src="{{asset('uploads')}}/{{$firstPost->project_file}}" width="300px" height="200px" alt="" />
+														<div class="sgt-text" style="margin-right: 6%">
+															@if($firstPost->project_file && (pathinfo($firstPost->project_file, PATHINFO_EXTENSION) === 'jpg' || pathinfo($firstPost->project_file, PATHINFO_EXTENSION) === 'png'))
+																<img src="{{ asset('uploads/'.$firstPost->project_file) }}" alt="" width="480px" height="400px">
+															@elseif($firstPost->project_file && (pathinfo($firstPost->project_file, PATHINFO_EXTENSION) === 'mp4' || pathinfo($firstPost->project_file, PATHINFO_EXTENSION) === 'mov'))
+																<video width="480px" height="400px" controls>
+																	<source src="{{ asset('uploads/'.$firstPost->project_file) }}" type="video/mp4">
+																</video>
+															@endif
+														</div>
+												{{-- <img src="{{asset('uploads')}}/{{$firstPost->project_file}}" width="300px" height="200px" alt="" /> --}}
                                             </div>
 											<div class="job-status-bar">
 												<ul class="like-com">
@@ -182,7 +191,12 @@
 														</div>
 													</li>
 												</ul>
-												<a><i class="la la-eye"></i>Views 50</a>
+																							
+												<a><i class="la la-eye"></i> Views <span id="view-count">{{ $post->views_count ?? 0 }}</span></a>
+
+
+
+												{{-- <a><i class="la la-eye"></i>Views 50</a> --}}
 											</div>
 										</div><!--post-bar end-->
 										<div class="top-profiles">
@@ -254,7 +268,16 @@
 													<li><span>{{$post->project_name}}</span></li>
 												</ul>
 												<p>{{$post->project_description}}</p>
-												<img src="{{asset('uploads')}}/{{$post->project_file}}" width="300px" height="200px" alt="" />
+												<div class="sgt-text" style="margin-right: 6%">
+													@if($post->project_file && (pathinfo($post->project_file, PATHINFO_EXTENSION) === 'jpg' || pathinfo($post->project_file, PATHINFO_EXTENSION) === 'png'))
+														<img src="{{ asset('uploads/'.$post->project_file) }}" alt="" width="480px" height="400px">
+													@elseif($post->project_file && (pathinfo($post->project_file, PATHINFO_EXTENSION) === 'mp4' || pathinfo($post->project_file, PATHINFO_EXTENSION) === 'mov'))
+														<video width="480px" height="400px" controls>
+															<source src="{{ asset('uploads/'.$post->project_file) }}" type="video/mp4">
+														</video>
+													@endif
+												</div>
+												{{-- <img src="{{asset('uploads')}}/{{$post->project_file}}" width="300px" height="200px" alt="" /> --}}
                                             </div>
 											<div class="job-status-bar">
 												<ul class="like-com">
@@ -394,7 +417,8 @@
 			<div class="post-project">
 				<h3>Create a project Post</h3>
 				<div class="post-project-fields">
-					<form action="{{route('project_post')}}" method="POST" enctype="multipart/form-data">
+					<form id="project-form" action="{{route('project_post')}}" method="POST" enctype="multipart/form-data">
+					{{-- <form action="{{route('project_post')}}" method="POST" enctype="multipart/form-data"> --}}
                         @csrf
 						<div class="row">
 							<div class="col-lg-12">
@@ -417,19 +441,31 @@
                                 @enderror
 							</div>
 							<div class="col-lg-12">
+								<input type="file" name="project_file" accept="image/*, video/*" placeholder="File Upload">
+								@error('project_file')
+									<span class="error">{{ $message }}</span>
+								@enderror
+							</div>
+							
+							{{-- <div class="col-lg-12">
 								<input type="file" name="project_file" placeholder="file Upload">
                                 @error('project_file')
                                     <span class="error">{{ $message }}</span>
                                 @enderror
-							</div>
+							</div> --}}
 							<div class="col-lg-12">
 								<textarea name="project_description" placeholder="Post Description"></textarea>
 							</div>
 							<div class="col-lg-12">
 								<ul>
-									<li><button class="active" type="submit" value="post">Post</button></li>
+									<li><button class="active" id="submit-btn" value="post">Post</button></li>
 									<li><a href="#" title="">Cancel</a></li>
 								</ul>
+								
+								{{-- <ul>
+									<li><button class="active" type="submit" value="post">Post</button></li>
+									<li><a href="#" title="">Cancel</a></li>
+								</ul> --}}
 							</div>
 						</div>
 					</form>
@@ -462,10 +498,15 @@
 							</div>
 							<div class="col-lg-12">
 								<input type="text" id="edit_project_name" name="project_name" placeholder="Subject">
+							</div><div class="col-lg-12">
+								<input type="file" name="project_file" id="edit_project_file" accept="image/*, video/*" placeholder="File Upload">
+								@error('project_file')
+									<span class="error">{{ $message }}</span>
+								@enderror
 							</div>
-							<div class="col-lg-12">
+							{{-- <div class="col-lg-12">
 								<input type="file" id="edit_project_file" name="project_file" placeholder="Image" >
-							</div>
+							</div> --}}
 							<div class="col-lg-12">
 								<textarea id="edit_project_description" name="project_description" placeholder="Description"></textarea>
 							</div>
@@ -686,7 +727,80 @@
 
 	</div><!--chat box with user message div end--> --}}
 
-		<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+	<!--Project Post fill all fields Javascript-->
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+	<script>
+		$(document).ready(function() {
+			$('#submit-btn').click(function(e) {
+				e.preventDefault(); // Prevent the form from submitting normally
+	
+				// Check if any field is empty
+				var isAnyFieldEmpty = false;
+				$('#project-form input, #project-form select, #project-form textarea').each(function() {
+					if ($(this).val() === '') {
+						isAnyFieldEmpty = true;
+						return false; // Exit the loop if any field is empty
+					}
+				});
+	
+				if (isAnyFieldEmpty) {
+					// Not all fields are filled, show a message or alert
+					alert('Please fill all fields before submitting.');
+				} else {
+					// All fields are filled, submit the form via AJAX
+					var form = $('#project-form')[0];
+					var formData = new FormData(form);
+	
+					$.ajax({
+						url: form.action,
+						method: form.method,
+						data: formData,
+						processData: false,
+						contentType: false,
+						success: function(response) {
+							// Handle the success response here
+							console.log(response);
+							$('#post-popup').removeClass('active'); // Close the popup window
+							location.reload(); // Refresh the page
+						},
+						error: function(xhr) {
+							// Handle the error response here
+							console.log(xhr.responseText);
+						}
+					});
+				}
+			});
+		});
+	</script>
+
+	<!-- View count javascript -->
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+	<script>
+		// Make an AJAX request to update the view count
+		function updateViewCount(postId) {
+			$.ajax({
+				url: '/posts/' + postId,
+				type: 'GET',
+				success: function(response) {
+					$('#view-count').text(response.views_count); // Update the view count in the HTML
+				},
+				error: function(xhr, status, error) {
+					console.log(error); // Handle the error if needed
+				}
+			});
+		}
+		
+		// Call the updateViewCount function with the post ID when the page loads
+		$(document).ready(function() {
+			var postId = {{ $post->id }};
+			updateViewCount(postId);
+		});
+	</script>
+	
+	
+
+		<!-- chat box javascript -->
+		{{-- <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 		<script>
 			function fetchUserConversations() {
 			fetch("/get-user-conversations")
@@ -821,7 +935,7 @@
 
 			// Refresh chat box every 3-4 seconds
 			setInterval(refreshChatBox, 3000);
-		</script>
+		</script> --}}
 
 	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>

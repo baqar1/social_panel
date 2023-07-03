@@ -38,7 +38,7 @@ $filename = pathinfo($user->avatar, PATHINFO_BASENAME)
         style="background-image: url('{{ $user->avatar }}');">
         </div> --}}
         <div class="avatar av-m"
-        style="background-image: url('{{asset("storage/attachments")}}/{{ $filename}}');">
+        style="background-image: url('{{asset("uploads/attachments")}}/{{ $filename}}');">
         </div>
         {{-- {{asset("storage/attachments")}}/{{ $attachment->file}}
         http://127.0.0.1:8000 --}}
@@ -78,7 +78,7 @@ $filename = pathinfo($user->avatar, PATHINFO_BASENAME)
         {{-- Avatar side --}}
         <td>
         <div class="avatar av-m"
-        style="background-image: url('{{ $user->avatar }}');">
+        style="background-image: url('{{asset('uploads')}}/{{($user->avatar) }}');">
         </div>
         </td>
         {{-- center side --}}
@@ -93,7 +93,7 @@ $filename = pathinfo($user->avatar, PATHINFO_BASENAME)
 
 {{-- -------------------- Shared photos Item -------------------- --}}
 @if($get == 'sharedPhoto')
-<div class="shared-photo chat-image" style="background-image: url('{{ $image }}')"></div>
+<div class="shared-photo chat-image" style="background-image: url('{{asset('uploads')}}/{{($image)}}')"></div>
 {{-- <div class="shared-photo chat-image" style="background-image: url('{{asset("storage/attachments")}}/{{ $user->user_image}}')"></div> --}}
 {{-- {{asset("storage/attachments")}}/{{ $attachment->file}} --}}
 @endif

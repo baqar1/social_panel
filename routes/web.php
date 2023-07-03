@@ -18,6 +18,14 @@ use Illuminate\Support\Facades\Route;
 */
 
 
+Route::get('password_update', function () {
+    return view('profile/partials/update-password-form');
+});
+Route::get('/posts/{id}', [DashboardController::class, 'showPost'])->name('post.show');
+
+
+
+
 // <-- RegisteredUserController Routes -->
 Route::post('/store', [RegisteredUserController::class, 'store'])->name('store');
 Route::get('/', [RegisteredUserController::class, 'welcome'])->name('welcome');

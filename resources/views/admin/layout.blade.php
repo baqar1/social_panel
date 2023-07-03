@@ -121,6 +121,8 @@
 							<ul class="us-links">
 								<li><a href="{{ route('account_edit', [auth()->user()->id]) }}" title="">Edit Profile Setting</a>
                                 </li>
+								<li><a href="{{ url('password_update') }}" title="">Password Update</a>
+                                </li>
 							</ul>
 							<form method="POST" action="{{ route('logout') }}">
 								@csrf

@@ -14,7 +14,8 @@ class Project_post extends Model
         'department',
         'project_name',
         'project_file',
-        'project_description'
+        'project_description',
+        'views_count',
     ];
     protected $attributes = [
         'project_file' => 'default.jpg',
