@@ -223,23 +223,15 @@ class DashboardController extends Controller
     }
 
 
-    
     public function showPost($id)
     {
         $post = project_post::findOrFail($id);
         $post->increment('views_count'); // Increment the views_count column by 1
     
-        return view('dashboard', compact('post'));
+        return response()->json(['views_count' => $post->views_count]);
     }
+     
     
-    
-
-    
-    
-    
-
-
-
 
 
     // <!-- View User profile -->

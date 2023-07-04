@@ -110,7 +110,7 @@
 										</div><!--post-st end-->
 									</div><!--post-topbar end-->
                                 	<div class="posts-section">
-										<div class="post-bar">
+										<div class="post-bar" data-post-id="{{ $firstPost->id }}">
 											<div class="post_topbar">
 												<div class="usy-dt">
 													<img src="{{asset('uploads')}}/{{$firstPost->user->user_image}}" alt="" width="50" height="50">
@@ -150,7 +150,7 @@
 															@if($firstPost->project_file && (pathinfo($firstPost->project_file, PATHINFO_EXTENSION) === 'jpg' || pathinfo($firstPost->project_file, PATHINFO_EXTENSION) === 'png'))
 																<img src="{{ asset('uploads/'.$firstPost->project_file) }}" alt="" width="480px" height="400px">
 															@elseif($firstPost->project_file && (pathinfo($firstPost->project_file, PATHINFO_EXTENSION) === 'mp4' || pathinfo($firstPost->project_file, PATHINFO_EXTENSION) === 'mov'))
-																<video width="480px" height="400px" controls>
+																<video id="video" width="480px" height="400px" controls>
 																	<source src="{{ asset('uploads/'.$firstPost->project_file) }}" type="video/mp4">
 																</video>
 															@endif
@@ -191,8 +191,9 @@
 														</div>
 													</li>
 												</ul>
-																							
-												<a><i class="la la-eye"></i> Views <span id="view-count">{{ $post->views_count ?? 0 }}</span></a>
+														@if($firstPost->project_file && (pathinfo($firstPost->project_file, PATHINFO_EXTENSION) === 'mp4' || pathinfo($firstPost->project_file, PATHINFO_EXTENSION) === 'mov'))									
+												<a><i class="la la-eye"></i> Views <span class="view-count" data-post-id="{{ $firstPost->id }}">{{ $firstPost->views_count ?? 0 }}</span></a>
+												@endif
 
 
 
@@ -270,9 +271,9 @@
 												<p>{{$post->project_description}}</p>
 												<div class="sgt-text" style="margin-right: 6%">
 													@if($post->project_file && (pathinfo($post->project_file, PATHINFO_EXTENSION) === 'jpg' || pathinfo($post->project_file, PATHINFO_EXTENSION) === 'png'))
-														<img src="{{ asset('uploads/'.$post->project_file) }}" alt="" width="480px" height="400px">
+														<img  src="{{ asset('uploads/'.$post->project_file) }}" alt="" width="480px" height="400px">
 													@elseif($post->project_file && (pathinfo($post->project_file, PATHINFO_EXTENSION) === 'mp4' || pathinfo($post->project_file, PATHINFO_EXTENSION) === 'mov'))
-														<video width="480px" height="400px" controls>
+														<video id="video" width="480px" height="400px" controls>
 															<source src="{{ asset('uploads/'.$post->project_file) }}" type="video/mp4">
 														</video>
 													@endif
@@ -313,7 +314,10 @@
 														</div>
 													</li>
 												</ul>
-												<a><i class="la la-eye"></i>Views 50</a>
+												@if($firstPost->project_file && (pathinfo($post->project_file, PATHINFO_EXTENSION) === 'mp4' || pathinfo($post ->project_file, PATHINFO_EXTENSION) === 'mov'))									
+												<a><i class="la la-eye"></i> Views <span class="view-count" data-post-id="{{ $post->id }}">{{ $post->views_count ?? 0 }}</span></a>
+												@endif
+
 											</div>
 										</div><!--post-bar end-->
 									</div><!--posts-section end-->
@@ -775,27 +779,56 @@
 
 	<!-- View count javascript -->
 	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-	<script>
-		// Make an AJAX request to update the view count
-		function updateViewCount(postId) {
-			$.ajax({
-				url: '/posts/' + postId,
-				type: 'GET',
-				success: function(response) {
-					$('#view-count').text(response.views_count); // Update the view count in the HTML
-				},
-				error: function(xhr, status, error) {
-					console.log(error); // Handle the error if needed
-				}
-			});
-		}
-		
-		// Call the updateViewCount function with the post ID when the page loads
-		$(document).ready(function() {
-			var postId = {{ $post->id }};
-			updateViewCount(postId);
-		});
-	</script>
+<script>
+    // Make an AJAX request to update the view count
+	$(document).ready(function() {
+    var videos = document.querySelectorAll('video');
+    videos.forEach(function(video) {
+        video.addEventListener('play', function() {
+            var postId = $(this).closest('.post-bar').find('.view-count').data('post-id');
+            var viewedVideos = getViewedVideos();
+            if (!viewedVideos.includes(postId)) {
+                updateViewCount(postId);
+                viewedVideos.push(postId);
+                setViewedVideos(viewedVideos);
+            }
+        });
+    });
+});
+
+function updateViewCount(postId) {
+    $.ajax({
+        url: '/posts/' + postId,
+        type: 'GET',
+        success: function(response) {
+            $('.view-count[data-post-id="' + postId + '"]').text(response.views_count);
+        },
+        error: function(xhr, status, error) {
+            console.log(error);
+        }
+    });
+}
+
+function getViewedVideos() {
+    var viewedVideos = localStorage.getItem('viewedVideos');
+    if (viewedVideos) {
+        return JSON.parse(viewedVideos);
+    } else {
+        return [];
+    }
+}
+
+function setViewedVideos(viewedVideos) {
+    localStorage.setItem('viewedVideos', JSON.stringify(viewedVideos));
+}
+
+
+
+
+</script>
+
+
+
 	
 	
 

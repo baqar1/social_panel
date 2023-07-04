@@ -21,7 +21,7 @@ use Illuminate\Support\Facades\Route;
 Route::get('password_update', function () {
     return view('profile/partials/update-password-form');
 });
-Route::get('/posts/{id}', [DashboardController::class, 'showPost'])->name('post.show');
+// Route::get('/posts/{id}', [DashboardController::class, 'showPost'])->name('post.show')->middleware('web');
 
 
 
@@ -60,6 +60,10 @@ Route::get('/dashboard/conversation/{userId}', [DashboardController::class, 'get
 Route::post('/dashboard/send-message/{userId}', [DashboardController::class, 'sendMessage'])->name('send_message');
 Route::get('/get-message-history/{userId}', [DashboardController::class, 'getMessageHistory'])->name('get_message_history');
 Route::post('/sendMessage/{id}', [DashboardController::class, 'sendMessage'])->name('send_message');
+
+Route::get('/posts/{id}', [DashboardController::class, 'showPost'])->name('post.show');
+
+
 });
 
 require __DIR__.'/auth.php';
